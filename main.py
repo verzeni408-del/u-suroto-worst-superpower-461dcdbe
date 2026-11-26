@@ -1,50 +1,53 @@
-"""Worst Superpower v2: the power that patches up your attacker.
+#!/usr/bin/env python3
+"""Worst Superpower v3: resurrection with a five-second refund window.
 
-The entry is a single fixed line. The program only assembles it from
-separate word groups, checks it against the gate (one line, 1-140
-characters, not blank), and writes it to entry.txt.
+The gag: the hero can raise the dead, but the dead only stay long
+enough to be let down by him all over again. The power is real, the
+payoff is nothing, and the owner is the one who ends up hurt.
+
+The script below holds the line in two clauses, joins them, checks
+the competition gate (a single line, 1-140 characters, not blank),
+and drops the result into entry.txt.
 """
 
+from pathlib import Path
 import os
 import sys
 
-
-def pick_fragments():
-    opener = "I can instantly heal anyone who just punched me"
-    payoff = "so my bullies leave every fight looking flawless"
-    sting = "while I keep the bruises"
-    return opener, payoff, sting
+CLAUSE_OPEN = "I can bring the dead back to life for five seconds,"
+CLAUSE_CLOSE = "just long enough for them to be disappointed in me again."
 
 
-def stitch_line(pieces):
-    line = pieces[0] + ", " + pieces[1] + " " + pieces[2] + "."
-    return line
+def build_sentence(head, tail):
+    """Glue the two clauses into the one-line entry."""
+    return " ".join((head.strip(), tail.strip()))
 
 
-def gate_ok(line):
-    if not line or not line.strip():
+def entry_is_valid(sentence):
+    """Gate: one non-blank line, 1 to 140 characters, no line breaks."""
+    if not sentence or not sentence.strip():
         return False
-    if "\n" in line or "\r" in line:
+    if any(mark in sentence for mark in ("\n", "\r")):
         return False
-    return 1 <= len(line) <= 140
+    return 1 <= len(sentence) <= 140
 
 
-def destination():
+def target_file():
+    """Resolve where entry.txt goes; the harness sets the env var."""
     folder = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    os.makedirs(folder, exist_ok=True)
-    return os.path.join(folder, "entry.txt")
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    return Path(folder) / "entry.txt"
 
 
-def main():
-    line = stitch_line(pick_fragments())
-    if not gate_ok(line):
-        print(f"entry failed gate: {len(line)} chars", file=sys.stderr)
+def run():
+    sentence = build_sentence(CLAUSE_OPEN, CLAUSE_CLOSE)
+    if not entry_is_valid(sentence):
+        print("entry failed gate: %d chars" % len(sentence), file=sys.stderr)
         return 1
-    with open(destination(), "w", encoding="utf-8") as handle:
-        handle.write(line + "\n")
-    print(f"wrote entry ({len(line)} chars)")
+    target_file().write_text(sentence + "\n", encoding="utf-8")
+    print("wrote entry (%d chars)" % len(sentence))
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(run())

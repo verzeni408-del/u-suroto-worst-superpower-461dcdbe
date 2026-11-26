@@ -1,29 +1,50 @@
-#!/usr/bin/env python3
-"""Worst Superpower — make.fun entry.
+"""Worst Superpower v2: the power that patches up your attacker.
 
-Writes a single line (at most 140 characters) inventing the most
-useless superpower to /output/entry.txt.
-
-The power: every traffic light turns green, but only for the cars
-behind the hero — so the one person it never helps is its owner.
-It is not a curse (nobody is harmed, only stuck at red) and it never
-quietly helps its owner; it simply works for everyone except him.
+The entry is a single fixed line. The program only assembles it from
+separate word groups, checks it against the gate (one line, 1-140
+characters, not blank), and writes it to entry.txt.
 """
 
 import os
+import sys
 
-ENTRY = "I can make every traffic light turn green, but only for the cars behind me."
+
+def pick_fragments():
+    opener = "I can instantly heal anyone who just punched me"
+    payoff = "so my bullies leave every fight looking flawless"
+    sting = "while I keep the bruises"
+    return opener, payoff, sting
+
+
+def stitch_line(pieces):
+    line = pieces[0] + ", " + pieces[1] + " " + pieces[2] + "."
+    return line
+
+
+def gate_ok(line):
+    if not line or not line.strip():
+        return False
+    if "\n" in line or "\r" in line:
+        return False
+    return 1 <= len(line) <= 140
+
+
+def destination():
+    folder = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
+    os.makedirs(folder, exist_ok=True)
+    return os.path.join(folder, "entry.txt")
 
 
 def main():
-    if not 1 <= len(ENTRY) <= 140:
-        raise ValueError("entry must be 1 to 140 characters")
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8", newline="") as f:
-        f.write(ENTRY)
+    line = stitch_line(pick_fragments())
+    if not gate_ok(line):
+        print(f"entry failed gate: {len(line)} chars", file=sys.stderr)
+        return 1
+    with open(destination(), "w", encoding="utf-8") as handle:
+        handle.write(line + "\n")
+    print(f"wrote entry ({len(line)} chars)")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

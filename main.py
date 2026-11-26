@@ -18,18 +18,28 @@ CLAUSE_OPEN = "I can bring the dead back to life for five seconds,"
 CLAUSE_CLOSE = "just long enough for them to be disappointed in me again."
 
 
+GATE_MAX_CHARS = 140
+
+
 def build_sentence(head, tail):
-    """Glue the two clauses into the one-line entry."""
-    return " ".join((head.strip(), tail.strip()))
+    """Glue the two clauses into the one-line entry.
+
+    Refuses an empty clause so a typo can never silently shorten
+    the line: a missing clause is a bug, not a shorter entry.
+    """
+    head, tail = head.strip(), tail.strip()
+    if not head or not tail:
+        raise ValueError("both clauses of the entry must be non-empty")
+    return head + " " + tail
 
 
 def entry_is_valid(sentence):
-    """Gate: one non-blank line, 1 to 140 characters, no line breaks."""
+    """Gate: one non-blank line, 1 to GATE_MAX_CHARS characters."""
     if not sentence or not sentence.strip():
         return False
     if any(mark in sentence for mark in ("\n", "\r")):
         return False
-    return 1 <= len(sentence) <= 140
+    return 1 <= len(sentence) <= GATE_MAX_CHARS
 
 
 def target_file():
